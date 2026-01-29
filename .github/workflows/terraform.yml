@@ -2,74 +2,90 @@ name: terraform
 
 on:
   pull_request:
-    branches: [ "main" ]
-    paths: [ "infra/**" ]
+    branches: ["main"]
+    paths:
+      - "infra/**"
   push:
-    branches: [ "main" ]
-    paths: [ "infra/**" ]
+    branches: ["main"]
+    paths:
+      - "infra/**"
+
+permissions:
+  contents: read
 
 jobs:
   plan:
+    name: Terraform Plan (dev)
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+
+    # IMPORTANT: job-wide Azure auth for azurerm provider + backend
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
     defaults:
       run:
         working-directory: infra
-    steps:
-      - uses: actions/checkout@v4
+        shell: bash
 
-      - uses: hashicorp/setup-terraform@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
 
-      - name: Terraform fmt
+      - name: Terraform fmt (check)
         run: terraform fmt -check -recursive
 
       - name: Terraform init
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: terraform init
 
       - name: Terraform validate
         run: terraform validate
 
       - name: Terraform plan (dev)
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        run: terraform plan -var-file=dev.tfvars -out=tfplan
-
-      - name: Upload plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: infra/tfplan
+        run: terraform plan -var-file="dev.tfvars" -no-color
 
   apply:
+    name: Terraform Apply (dev)
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+
+    # IMPORTANT: job-wide Azure auth for azurerm provider + backend
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
     defaults:
       run:
         working-directory: infra
-    steps:
-      - uses: actions/checkout@v4
+        shell: bash
 
-      - uses: hashicorp/setup-terraform@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
+
+      - name: Terraform fmt (check)
+        run: terraform fmt -check -recursive
 
       - name: Terraform init
         run: terraform init
 
+      - name: Terraform validate
+        run: terraform validate
+
       - name: Terraform apply (dev)
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        run: terraform apply -auto-approve -var-file=dev.tfvars
+        run: terraform apply -auto-approve -var-file="dev.tfvars" -no-color
