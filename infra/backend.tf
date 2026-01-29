@@ -1,9 +1,8 @@
 terraform {
   backend "azurerm" {
-    # Configure these values in your backend config or pipeline secrets.
-    resource_group_name  = ""
-    storage_account_name = ""
-    container_name       = ""
-    key                  = "terraform.tfstate"
+    resource_group_name  = "rg-tfstate-demo"
+    storage_account_name = "sttfstateXYZ123"
+    container_name       = "tfstate"
+    key                  = "demo-functions-dev.tfstate"
   }
 }
