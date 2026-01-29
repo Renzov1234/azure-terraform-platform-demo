@@ -1,32 +1,40 @@
-name: Deploy (Terraform Apply)
+name: deploy-function
 
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Target environment"
-        required: true
-        type: choice
-        options:
-          - dev
-          - prod
+  push:
+    branches: [ "main" ]
+    paths: [ "app/**" ]
 
 jobs:
-  apply:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          terraform_version: 1.5.7
+          node-version: "18"
 
-      - name: Terraform Init
-        working-directory: infra
-        run: terraform init
+      - name: Install dependencies
+        working-directory: app
+        run: npm ci
 
-      - name: Terraform Apply
-        working-directory: infra
-        run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      - name: Basic test
+        working-directory: app
+        run: npm test
+
+      - name: Azure Login (SP)
+        uses: azure/login@v2
+        with:
+          creds: >
+            {"clientId":"${{ secrets.AZURE_CLIENT_ID }}",
+             "clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}",
+             "tenantId":"${{ secrets.AZURE_TENANT_ID }}",
+             "subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}"}
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
+          package: app
