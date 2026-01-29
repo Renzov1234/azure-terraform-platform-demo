@@ -1,0 +1,16 @@
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform.lock.hcl.bak
+**/crash.log
+
+# Node
+node_modules/
+
+# Azure Functions local settings
+app/local.settings.json
+
+# OS
+.DS_Store
+Thumbs.db
