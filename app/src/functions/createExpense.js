@@ -1,4 +1,3 @@
-// Placeholder function file.
 const { TableClient } = require("@azure/data-tables");
 
 function badRequest(message) {
