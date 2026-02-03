@@ -8,7 +8,7 @@ resource "random_string" "suffix" {
   special = false
 }
 
-# We deploy into an existing RG to keep access tight (SP scoped to this RG).
+
 data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
