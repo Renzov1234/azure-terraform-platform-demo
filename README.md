@@ -118,7 +118,7 @@ Damit ist der komplette Weg abgedeckt: Code → Plan → Review → Apply → De
 
 * Ich kann eine kleine, realistische Azure-Architektur eigenständig planen und umsetzen.
 * Ich setze Infrastruktur konseqünt mit Terraform um (Remote State, Module, Environments).
-* Ich baü CI/CD Pipelines mit GitHub Actions, inkl. Plan/Apply Logik und Environments.
+* Ich baue CI/CD Pipelines mit GitHub Actions, inkl. Plan/Apply Logik und Environments.
 * Ich denke an Kosten, Monitoring und Security, nicht nur daran, dass es irgendwie läuft.
 
 
